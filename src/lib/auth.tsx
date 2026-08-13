@@ -8,14 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { Profile } from './types';
-import {
-  createUser,
-  findUserByEmail,
-  findUserById,
-  getSession,
-  setSession,
-  toProfile,
-} from './store';
+import { supabase } from './supabase';
 
 interface AuthState {
   user: { id: string; email: string } | null;
@@ -24,6 +17,8 @@ interface AuthState {
   error: string | null;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string) => Promise<{ error: string | null }>;
+  signInWithGoogle: () => Promise<{ error: string | null }>;
+  signInWithFacebook: () => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -31,77 +26,141 @@ interface AuthState {
 const Ctx = createContext<AuthState | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const sess = getSession();
-    if (sess) {
-      const u = findUserById(sess.userId);
-      if (u) setProfile(toProfile(u));
-      else setSession(null);
+  var loadProfile = useCallback(async function (uid: string) {
+    var result = await supabase.from('profiles').select('*').eq('id', uid).maybeSingle();
+    if (result.data) {
+      setProfile(result.data as Profile);
+    } else {
+      setProfile(null);
     }
-    setLoading(false);
   }, []);
 
-  const signIn = useCallback(async (email: string, password: string) => {
+  useEffect(function () {
+    var init = async function () {
+      var sessionResult = await supabase.auth.getSession();
+      var session = sessionResult.data.session;
+      if (session && session.user) {
+        setUserId(session.user.id);
+        setUserEmail(session.user.email || '');
+        await loadProfile(session.user.id);
+      }
+      setLoading(false);
+    };
+    init();
+
+    var listener = supabase.auth.onAuthStateChange(function (_event, session) {
+      if (session && session.user) {
+        setUserId(session.user.id);
+        setUserEmail(session.user.email || '');
+        loadProfile(session.user.id);
+      } else {
+        setUserId(null);
+        setUserEmail(null);
+        setProfile(null);
+      }
+    });
+
+    return function () {
+      listener.data.subscription.unsubscribe();
+    };
+  }, [loadProfile]);
+
+  var signIn = useCallback(async function (email: string, password: string) {
     setError(null);
-    const u = findUserByEmail(email.trim());
-    if (!u || u.password !== password) {
-      const msg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+    var result = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password: password,
+    });
+    if (result.error) {
+      var msg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
       setError(msg);
       return { error: msg };
     }
-    setSession(u.id);
-    setProfile(toProfile(u));
     return { error: null };
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string) => {
+  var signUp = useCallback(async function (email: string, password: string) {
     setError(null);
-    const exists = findUserByEmail(email.trim());
-    if (exists) {
-      const msg = 'هذا البريد مسجّل مسبقاً. سجّل الدخول بدلاً من ذلك.';
+    var result = await supabase.auth.signUp({
+      email: email.trim(),
+      password: password,
+    });
+    if (result.error) {
+      var msg = result.error.message;
+      if (msg.indexOf('already registered') !== -1) {
+        msg = 'هذا البريد مسجّل مسبقاً. سجّل الدخول بدلاً من ذلك.';
+      }
       setError(msg);
       return { error: msg };
     }
-    const u = createUser(email.trim(), password);
-    setSession(u.id);
-    setProfile(toProfile(u));
     return { error: null };
   }, []);
 
-  const signOut = useCallback(async () => {
-    setSession(null);
+  var signInWithGoogle = useCallback(async function () {
+    setError(null);
+    var result = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    });
+    if (result.error) {
+      setError(result.error.message);
+      return { error: result.error.message };
+    }
+    return { error: null };
+  }, []);
+
+  var signInWithFacebook = useCallback(async function () {
+    setError(null);
+    var result = await supabase.auth.signInWithOAuth({
+      provider: 'facebook',
+      options: { redirectTo: window.location.origin },
+    });
+    if (result.error) {
+      setError(result.error.message);
+      return { error: result.error.message };
+    }
+    return { error: null };
+  }, []);
+
+  var signOut = useCallback(async function () {
+    await supabase.auth.signOut();
+    setUserId(null);
+    setUserEmail(null);
     setProfile(null);
-  }, []);
+  }, []);var refreshProfile = useCallback(async function () {
+    if (!userId) return;
+    await loadProfile(userId);
+  }, [userId, loadProfile]);
 
-  const refreshProfile = useCallback(async () => {
-    if (!profile) return;
-    const u = findUserById(profile.id);
-    if (u) setProfile(toProfile(u));
-  }, [profile]);
-
-  const value = useMemo<AuthState>(
-    () => ({
-      user: profile ? { id: profile.id, email: profile.email } : null,
-      profile,
-      loading,
-      error,
-      signIn,
-      signUp,
-      signOut,
-      refreshProfile,
-    }),
-    [profile, loading, error, signIn, signUp, signOut, refreshProfile],
+  var value = useMemo<AuthState>(
+    function () {
+      return {
+        user: userId ? { id: userId, email: userEmail || '' } : null,
+        profile: profile,
+        loading: loading,
+        error: error,
+        signIn: signIn,
+        signUp: signUp,
+        signInWithGoogle: signInWithGoogle,
+        signInWithFacebook: signInWithFacebook,
+        signOut: signOut,
+        refreshProfile: refreshProfile,
+      };
+    },
+    [userId, userEmail, profile, loading, error, signIn, signUp, signInWithGoogle, signInWithFacebook, signOut, refreshProfile],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
 export function useAuth(): AuthState {
-  const ctx = useContext(Ctx);
+  var ctx = useContext(Ctx);
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 }
