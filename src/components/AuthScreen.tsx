@@ -41,6 +41,11 @@ export function AuthScreen() {
 
   const displayErr = localErr ?? error;
 
+  const tabActiveClass = 'bg-primary text-bg glow-primary';
+  const tabInactiveClass = 'text-muted hover:text-text';
+  const signinTabClass = 'py-2.5 rounded-xl text-sm font-extrabold transition-all ' + (mode === 'signin' ? tabActiveClass : tabInactiveClass);
+  const signupTabClass = 'py-2.5 rounded-xl text-sm font-extrabold transition-all ' + (mode === 'signup' ? tabActiveClass : tabInactiveClass);
+
   return (
     <div className="min-h-screen flex flex-col">
       <div className="bg-gradient-to-l from-[#11161f] via-[#0c1018] to-[#11161f] border-b border-border-soft overflow-hidden">
@@ -68,17 +73,13 @@ export function AuthScreen() {
             <div className="grid grid-cols-2 gap-1 p-1 bg-bg-soft rounded-2xl mb-5">
               <button
                 onClick={() => { setMode('signin'); setLocalErr(null); }}
-                className={py-2.5 rounded-xl text-sm font-extrabold transition-all ${
-                  mode === 'signin' ? 'bg-primary text-bg glow-primary' : 'text-muted hover:text-text'
-                }}
+                className={signinTabClass}
               >
                 تسجيل الدخول
               </button>
               <button
                 onClick={() => { setMode('signup'); setLocalErr(null); }}
-                className={py-2.5 rounded-xl text-sm font-extrabold transition-all ${
-                  mode === 'signup' ? 'bg-primary text-bg glow-primary' : 'text-muted hover:text-text'
-                }}
+                className={signupTabClass}
               >
                 إنشاء حساب
               </button>
@@ -88,9 +89,9 @@ export function AuthScreen() {
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-muted">البريد الإلكتروني</label>
                 <div className="relative">
-                  <Mail size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-faint" />
-                  <input
-                    type="email"dir="ltr"
+                  <Mail size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-faint" /><input
+                    type="email"
+                    dir="ltr"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
@@ -161,9 +162,7 @@ export function AuthScreen() {
                 ? 'إذا لم يكن لديك حساب، أنشئ واحداً لتتمكن من الشراء.'
                 : 'بإنشاء حساب توافق على شروط استخدام المتجر.'}
             </p>
-          </div>
-
-          <p className="text-center text-[11px] text-faint mt-4">
+          </div><p className="text-center text-[11px] text-faint mt-4">
             جميع المعاملات آمنة ومحمية • الدعم الفني متاح على مدار الساعة
           </p>
         </div>
