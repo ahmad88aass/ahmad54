@@ -25,12 +25,12 @@ export function AuthScreen() {
     }
     setBusy(true);
     if (mode === 'signin') {
-      var res = await signIn(email.trim(), password);
+      const res = await signIn(email.trim(), password);
       if (!res.error) {
         window.location.reload();
       }
     } else {
-      var res2 = await signUp(email.trim(), password);
+      const res2 = await signUp(email.trim(), password);
       if (!res2.error) {
         setLocalErr('تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.');
         setMode('signin');
