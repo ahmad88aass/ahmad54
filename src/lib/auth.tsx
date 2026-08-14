@@ -47,7 +47,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       var session = sessionResult.data.session;
       if (session && session.user) {
         setUserId(session.user.id);
-        setUserEmail(session.user.email || '');
+        var emailVal = session.user.email;
+        if (!emailVal) { emailVal = ''; }
+        setUserEmail(emailVal);
         await loadProfile(session.user.id);
       }
       setLoading(false);
@@ -57,7 +59,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     var listener = supabase.auth.onAuthStateChange(function (_event, session) {
       if (session && session.user) {
         setUserId(session.user.id);
-        setUserEmail(session.user.email || '');
+        var emailVal2 = session.user.email;
+        if (!emailVal2) { emailVal2 = ''; }
+        setUserEmail(emailVal2);
         loadProfile(session.user.id);
       } else {
         setUserId(null);
@@ -126,22 +130,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: result.error.message };
     }
     return { error: null };
-  }, []);
-
-  var signOut = useCallback(async function () {
+  }, []);var signOut = useCallback(async function () {
     await supabase.auth.signOut();
     setUserId(null);
     setUserEmail(null);
     setProfile(null);
-  }, []);var refreshProfile = useCallback(async function () {
+  }, []);
+
+  var refreshProfile = useCallback(async function () {
     if (!userId) return;
     await loadProfile(userId);
   }, [userId, loadProfile]);
 
   var value = useMemo<AuthState>(
     function () {
+      var emailOut = userEmail;
+      if (!emailOut) { emailOut = ''; }
       return {
-        user: userId ? { id: userId, email: userEmail || '' } : null,
+        user: userId ? { id: userId, email: emailOut } : null,
         profile: profile,
         loading: loading,
         error: error,
