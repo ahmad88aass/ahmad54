@@ -106,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
     var result = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: 'https://ahmad88aass.github.io/ahmad54/' },
     });
     if (result.error) {
       setError(result.error.message);
@@ -119,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
     var result = await supabase.auth.signInWithOAuth({
       provider: 'facebook',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: 'https://ahmad88aass.github.io/ahmad54/' },
     });
     if (result.error) {
       setError(result.error.message);
