@@ -155,18 +155,14 @@ export function AuthScreen() {
                   <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.3-4.1 5.8l6.6 5.6C41.9 36 44 30.5 44 24c0-1.3-.1-2.7-.4-3.5z" />
                 </svg>
                 المتابعة عبر جوجل
-              </button>
+              
 
-              <button
-                type="button"
-                onClick={() => signInWithFacebook()}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-[#1877F2] text-white font-bold text-sm hover:brightness-110 transition">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-                  <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z" />
-                </svg>
-                المتابعة عبر فيسبوك
-              </button>
-            </div>
+          
+               
+       
+          
+                   
+            
 
             <p className="text-center text-[11px] text-faint mt-4 leading-relaxed">
               {mode === 'signin'
