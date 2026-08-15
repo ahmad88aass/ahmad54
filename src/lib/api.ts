@@ -9,7 +9,7 @@ import {
 } from './store';
 import type { Order, OrderStatus, Profile } from './types';
 
-export function placeOrder(input: {
+export async function placeOrder(input: {
   userId: string;
   serviceKey: string;
   serviceName: string;
@@ -17,41 +17,35 @@ export function placeOrder(input: {
   price: number;
   targetInput?: string | null;
   waitForCode?: boolean;
-}): { ok: boolean; error?: string; order?: Order } {
+}): Promise<{ ok: boolean; error?: string; order?: Order }> {
   return storePlaceOrder(input);
 }
 
-export function requestRecharge(userCode: string, email: string): { ok: boolean } {
+export async function requestRecharge(userCode: string, email: string): Promise<{ ok: boolean }> {
   return storeRequestRecharge(userCode, email);
 }
 
-export function adminListUsers(): Profile[] {
-  return getAllUsers().map((u) => {
-    const { password: _pw, ...p } = u;
-    void _pw;
-    return p;
-  });
+export async function adminListUsers(): Promise<Profile[]> {
+  var users = await getAllUsers();
+  return users;
 }
 
-export function adminListOrders(): (Order & { user_code?: string; email?: string })[] {
-  const users = getAllUsers();
-  return getAllOrders().map((o) => {
-    const u = users.find((x) => x.id === o.user_id);
-    return { ...o, user_code: u?.user_code, email: u?.email };
-  });
+export async function adminListOrders(): Promise<(Order & { user_code?: string; email?: string })[]> {
+  var orders = await getAllOrders();
+  return orders;
 }
 
-export function adminUpdateBalance(userId: string, balance: number): void {
-  storeSetBalance(userId, balance);
+export async function adminUpdateBalance(userId: string, balance: number): Promise<void> {
+  await storeSetBalance(userId, balance);
 }
 
-export function adminUpdateOrder(
+export async function adminUpdateOrder(
   orderId: string,
   patch: { status?: OrderStatus; activationCode?: string; notes?: string },
-): void {
-  storeUpdateOrder(orderId, patch);
+): Promise<void> {
+  await storeUpdateOrder(orderId, patch);
 }
 
-export function adminSetAdmin(userId: string, isAdmin: boolean): void {
-  storeSetAdmin(userId, isAdmin);
+export async function adminSetAdmin(userId: string, isAdmin: boolean): Promise<void> {
+  await storeSetAdmin(userId, isAdmin);
 }

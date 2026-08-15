@@ -33,9 +33,10 @@ export function OrdersPage() {
   const [copied, setCopied] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | OrderStatus>('all');
 
-  const load = () => {
+  const load = async () => {
     if (!profile) return;
-    setOrders(getOrdersForUser(profile.id));
+    const data = await getOrdersForUser(profile.id);
+    setOrders(data);
     setLoading(false);
   };
 
@@ -90,17 +91,16 @@ export function OrdersPage() {
         </button>
       </div>
 
-      {/* Filters */}
       <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
         {(['all', 'قيد المعالجة', 'انتظار الكود', 'مكتمل', 'ملغي'] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
+            className={inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
               filter === f
                 ? 'bg-primary/10 border-primary/40 text-primary'
                 : 'bg-surface/40 border-border-soft text-muted hover:text-text'
-            }`}
+            }}
           >
             {f === 'all' ? 'الكل' : f}
             <span className="text-[10px] opacity-70">({counts[f] ?? 0})</span>
@@ -108,8 +108,7 @@ export function OrdersPage() {
         ))}
       </div>
 
-      {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center text-faint">
+      {filtered.length === 0 ? (<div className="flex flex-col items-center justify-center py-16 text-center text-faint">
           <ShoppingBag size={40} className="opacity-30 mb-3" />
           <p className="text-sm font-bold">لا توجد طلبات بعد</p>
           <p className="text-xs mt-1">تصفّح المتجر وابدأ أول طلب لك.</p>
@@ -124,13 +123,13 @@ export function OrdersPage() {
             return (
               <div key={o.id} className="glass rounded-2xl p-4 fade-in">
                 <div className="flex items-start gap-3">
-                  <span className={`grid place-items-center w-11 h-11 rounded-xl ${colors.bg} ${colors.text} shrink-0`}>
+                  <span className={grid place-items-center w-11 h-11 rounded-xl ${colors.bg} ${colors.text} shrink-0}>
                     <ServiceGlyph category={cat} size={22} />
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <h3 className="text-sm font-extrabold text-text truncate">{o.service_name}</h3>
-                      <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${sm.bg} ${sm.color}`}>
+                      <span className={'inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ' + sm.bg + ' ' + sm.color}>
                         <sm.icon size={11} /> {o.status}
                       </span>
                     </div>
@@ -154,7 +153,6 @@ export function OrdersPage() {
                   </div>
                 </div>
 
-                {/* Activation code */}
                 {o.activation_code && (
                   <div className="mt-3 rounded-xl bg-primary/5 border border-primary/30 p-3">
                     <div className="flex items-center gap-1.5 text-[11px] font-bold text-primary mb-1.5">
@@ -179,9 +177,7 @@ export function OrdersPage() {
                   <p className="text-xs text-muted mt-2 bg-surface-2/50 rounded-lg p-2 leading-relaxed">
                     {o.notes}
                   </p>
-                )}
-
-                {o.status === 'انتظار الكود' && !o.activation_code && (
+                )}{o.status === 'انتظار الكود' && !o.activation_code && (
                   <div className="flex items-center gap-1.5 mt-2 text-[11px] text-warning">
                     <AlertCircle size={13} />
                     <span>بانتظار إرسال كود التفعيل من الإدارة.</span>

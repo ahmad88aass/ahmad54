@@ -37,12 +37,14 @@ export function AdminPage() {
   const [query, setQuery] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  const load = useCallback(() => {
+  const load = useCallback(async () => {
     setLoading(true);
     if (tab === 'users') {
-      setUsers(adminListUsers());
+      const data = await adminListUsers();
+      setUsers(data);
     } else {
-      setOrders(adminListOrders());
+      const data = await adminListOrders();
+      setOrders(data);
     }
     setLoading(false);
   }, [tab]);
@@ -65,27 +67,27 @@ export function AdminPage() {
       (o.email ?? '').toLowerCase().includes(query.toLowerCase()),
   );
 
-  const setBalance = (u: Profile, raw: string) => {
+  const setBalance = async (u: Profile, raw: string) => {
     const bal = Number(raw);
     if (Number.isNaN(bal)) return;
     setBusyId(u.id);
-    adminUpdateBalance(u.id, bal);
+    await adminUpdateBalance(u.id, bal);
     setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, balance: bal } : x)));
     setBusyId(null);
   };
 
-  const setOrderStatus = (o: AdminOrder, status: OrderStatus) => {
+  const setOrderStatus = async (o: AdminOrder, status: OrderStatus) => {
     setBusyId(o.id);
-    adminUpdateOrder(o.id, { status });
+    await adminUpdateOrder(o.id, { status });
     setOrders((prev) => prev.map((x) => (x.id === o.id ? { ...x, status } : x)));
     setBusyId(null);
   };
 
-  const sendCode = (o: AdminOrder) => {
+  const sendCode = async (o: AdminOrder) => {
     const code = window.prompt('أدخل كود التفعيل لإرساله للمستخدم:');
     if (!code) return;
     setBusyId(o.id);
-    adminUpdateOrder(o.id, { activationCode: code, status: 'مكتمل' });
+    await adminUpdateOrder(o.id, { activationCode: code, status: 'مكتمل' });
     setOrders((prev) =>
       prev.map((x) =>
         x.id === o.id
@@ -96,9 +98,9 @@ export function AdminPage() {
     setBusyId(null);
   };
 
-  const toggleAdmin = (u: Profile) => {
+  const toggleAdmin = async (u: Profile) => {
     setBusyId(u.id);
-    adminSetAdmin(u.id, !u.is_admin);
+    await adminSetAdmin(u.id, !u.is_admin);
     setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, is_admin: !x.is_admin } : x)));
     setBusyId(null);
   };
@@ -121,8 +123,7 @@ export function AdminPage() {
         />
       </div>
 
-      <div className="flex items-center gap-1 p-1 bg-surface/60 rounded-2xl border border-border-soft">
-        <TabBtn active={tab === 'users'} onClick={() => setTab('users')} icon={Users} label="المستخدمون" />
+      <div className="flex items-center gap-1 p-1 bg-surface/60 rounded-2xl border border-border-soft"><TabBtn active={tab === 'users'} onClick={() => setTab('users')} icon={Users} label="المستخدمون" />
         <TabBtn active={tab === 'orders'} onClick={() => setTab('orders')} icon={ShoppingBag} label="الطلبات" />
         <div className="flex-1" />
         <button
@@ -185,11 +186,11 @@ export function AdminPage() {
                   <button
                     onClick={() => toggleAdmin(u)}
                     disabled={busyId === u.id}
-                    className={`text-[11px] font-bold px-3 py-1.5 rounded-lg transition-colors ${
+                    className={text-[11px] font-bold px-3 py-1.5 rounded-lg transition-colors ${
                       u.is_admin
                         ? 'bg-error/10 hover:bg-error/20 text-error'
                         : 'bg-surface-2 hover:bg-border text-muted'
-                    }`}
+                    }}
                   >
                     {u.is_admin ? 'إزالة الأدمن' : 'تعيين أدمن'}
                   </button>
@@ -201,8 +202,7 @@ export function AdminPage() {
       ) : (
         <div className="space-y-2.5">
           {filteredOrders.length === 0 ? (
-            <Empty icon={ShoppingBag} text="لا توجد طلبات." />
-          ) : (
+            <Empty icon={ShoppingBag} text="لا توجد طلبات." />) : (
             filteredOrders.map((o) => {
               const svc = getService(o.service_key);
               const cat = svc?.category ?? 'telegram';
@@ -210,7 +210,7 @@ export function AdminPage() {
               return (
                 <div key={o.id} className="glass rounded-2xl p-4">
                   <div className="flex items-start gap-3">
-                    <span className={`grid place-items-center w-10 h-10 rounded-xl ${colors.bg} ${colors.text} shrink-0`}>
+                    <span className={grid place-items-center w-10 h-10 rounded-xl ${colors.bg} ${colors.text} shrink-0}>
                       <ServiceGlyph category={cat} size={20} />
                     </span>
                     <div className="flex-1 min-w-0">
@@ -243,11 +243,11 @@ export function AdminPage() {
                         key={s}
                         onClick={() => setOrderStatus(o, s)}
                         disabled={busyId === o.id}
-                        className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-colors ${
+                        className={inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-colors ${
                           o.status === s
                             ? 'bg-primary/15 border-primary/40 text-primary'
                             : 'bg-surface-2 border-border-soft text-muted hover:text-text'
-                        }`}
+                        }}
                       >
                         {s === 'مكتمل' && <Check size={11} />}
                         {s === 'ملغي' && <X size={11} />}
@@ -277,12 +277,10 @@ export function AdminPage() {
       </div>
     </div>
   );
-}
-
-function Stat({ icon: Icon, label, value, color }: { icon: typeof Users; label: string; value: number | string; color: string }) {
+}function Stat({ icon: Icon, label, value, color }: { icon: typeof Users; label: string; value: number | string; color: string }) {
   return (
     <div className="glass rounded-2xl p-3 text-center">
-      <Icon size={16} className={`${color} mx-auto mb-1`} />
+      <Icon size={16} className={${color} mx-auto mb-1} />
       <p className="text-[10px] text-faint">{label}</p>
       <p className="text-sm font-extrabold text-text">{value}</p>
     </div>
@@ -293,9 +291,9 @@ function TabBtn({ active, onClick, icon: Icon, label }: { active: boolean; onCli
   return (
     <button
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+      className={inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
         active ? 'bg-primary text-bg glow-primary' : 'text-muted hover:text-text'
-      }`}
+      }}
     >
       <Icon size={15} /> {label}
     </button>

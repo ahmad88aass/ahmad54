@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { AuthScreen } from '@/components/AuthScreen';
 import { Header } from '@/components/Header';
@@ -24,6 +24,7 @@ function Shell() {
   const [supportOpen, setSupportOpen] = useState(false);
   const [buyService, setBuyService] = useState<ServiceDef | null>(null);
   const [ordersTick, setOrdersTick] = useState(0);
+  const [ordersCount, setOrdersCount] = useState(0);
 
   const openRecharge = useCallback(() => setRechargeOpen(true), []);
   const openShare = useCallback(() => setShareOpen(true), []);
@@ -35,6 +36,23 @@ function Shell() {
     setOrdersTick((t) => t + 1);
     setPage('orders');
   }, []);
+
+  useEffect(() => {
+    if (!profile) return;
+    var active = true;
+    const load = async () => {
+      const orders = await getOrdersForUser(profile.id);
+      if (!active) return;
+      const count = orders.filter(
+        (o) => o.status === 'قيد المعالجة' || o.status === 'انتظار الكود',
+      ).length;
+      setOrdersCount(count);
+    };
+    load();
+    return () => {
+      active = false;
+    };
+  }, [profile, ordersTick]);
 
   if (loading) {
     return (
@@ -50,10 +68,6 @@ function Shell() {
   if (!profile) {
     return <AuthScreen />;
   }
-
-  const ordersCount = getOrdersForUser(profile.id).filter(
-    (o) => o.status === 'قيد المعالجة' || o.status === 'انتظار الكود',
-  ).length;
 
   const isAdmin = profile.is_admin;
   const effectivePage = page === 'admin' && !isAdmin ? 'home' : page;
@@ -89,9 +103,7 @@ function Shell() {
         </main>
       </div>
 
-      <BottomNav page={effectivePage} onChange={setPage} ordersCount={ordersCount} />
-
-      <RechargeModal open={rechargeOpen} onClose={() => setRechargeOpen(false)} />
+      <BottomNav page={effectivePage} onChange={setPage} ordersCount={ordersCount} /><RechargeModal open={rechargeOpen} onClose={() => setRechargeOpen(false)} />
       <ShareModal open={shareOpen} onClose={() => setShareOpen(false)} />
       <SupportModal open={supportOpen} onClose={() => setSupportOpen(false)} />
       <ServicePurchaseModal

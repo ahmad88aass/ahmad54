@@ -15,6 +15,7 @@ import type { ServiceDef, ServicePlan } from '@/lib/types';
 import { formatMoney } from '@/lib/format';
 import { useAuth } from '@/lib/auth';
 import { placeOrder } from '@/lib/api';
+
 interface Props {
   service: ServiceDef | null;
   open: boolean;
@@ -72,13 +73,13 @@ export function ServicePurchaseModal({
   };
 
   const handleSubmit = async () => {
-    if (!service || !user || !profile || !canSubmit) return;
+    if (!service  !user  !profile || !canSubmit) return;
     setSubmitting(true);
     setError(null);
     const planLabel = service.plans
       ? selectedPlan?.label ?? ''
       : service.presetPlan ?? service.name;
-    const r = placeOrder({
+    const r = await placeOrder({
       userId: user.id,
       serviceKey: service.key,
       serviceName: service.name,
@@ -107,10 +108,9 @@ export function ServicePurchaseModal({
   return (
     <Modal open={open} onClose={handleClose} size="md">
       <div className="space-y-5">
-        {/* Header */}
         <div className="flex items-start gap-3">
           <span
-            className={`grid place-items-center w-14 h-14 rounded-2xl ${colors.bg} ${colors.text} shrink-0`}
+            className={grid place-items-center w-14 h-14 rounded-2xl ${colors.bg} ${colors.text} shrink-0}
           >
             <ServiceGlyph category={service.category} size={30} />
           </span>
@@ -125,8 +125,7 @@ export function ServicePurchaseModal({
         {done ? (
           <div className="space-y-4 fade-in">
             <div className="flex flex-col items-center text-center gap-3 py-4">
-              <span className="grid place-items-center w-16 h-16 rounded-full bg-success/15 text-success pulse-ring">
-                <Check size={30} />
+              <span className="grid place-items-center w-16 h-16 rounded-full bg-success/15 text-success pulse-ring"><Check size={30} />
               </span>
               <h4 className="text-lg font-extrabold text-text">تم استلام طلبك بنجاح</h4>
               <p className="text-sm text-muted max-w-xs">
@@ -165,7 +164,6 @@ export function ServicePurchaseModal({
           </div>
         ) : (
           <>
-            {/* Plans */}
             {service.plans && (
               <div className="space-y-2">
                 <p className="text-xs font-bold text-muted">اختر الباقة</p>
@@ -176,11 +174,11 @@ export function ServicePurchaseModal({
                       <button
                         key={p.id}
                         onClick={() => setSelectedPlan(p)}
-                        className={`flex flex-col items-start gap-0.5 p-3 rounded-2xl border text-right transition-all ${
+                        className={flex flex-col items-start gap-0.5 p-3 rounded-2xl border text-right transition-all ${
                           active
                             ? 'border-primary bg-primary/10 glow-primary'
                             : 'border-border-soft bg-surface-2 hover:border-border'
-                        }`}
+                        }}
                       >
                         <span className="text-sm font-bold text-text">{p.label}</span>
                         <span className="text-lg font-extrabold text-gradient-gold">
@@ -198,7 +196,6 @@ export function ServicePurchaseModal({
               </div>
             )}
 
-            {/* Input */}
             {requiresInput && (
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-muted block">{service.inputLabel}</label>
@@ -208,8 +205,7 @@ export function ServicePurchaseModal({
                     onChange={(e) => setInput(e.target.value)}
                     placeholder={service.inputPlaceholder}
                     rows={3}
-                    className="w-full rounded-2xl bg-surface-2 border border-border-soft focus:border-primary/50 px-4 py-3 text-sm text-text outline-none resize-none transition-colors"
-                  />
+                    className="w-full rounded-2xl bg-surface-2 border border-border-soft focus:border-primary/50 px-4 py-3 text-sm text-text outline-none resize-none transition-colors"/>
                 ) : (
                   <input
                     value={input}
@@ -222,7 +218,6 @@ export function ServicePurchaseModal({
               </div>
             )}
 
-            {/* Price + balance summary */}
             <div className="rounded-2xl bg-bg-soft border border-border-soft p-4 space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="flex items-center gap-1.5 text-muted">
@@ -239,7 +234,7 @@ export function ServicePurchaseModal({
               <div className="border-t border-border-soft pt-2 flex items-center justify-between">
                 <span className="text-sm text-muted">الرصيد بعد الطلب</span>
                 <span
-                  className={`font-extrabold ${insufficient ? 'text-error' : 'text-success'}`}
+                  className={font-extrabold ${insufficient ? 'text-error' : 'text-success'}}
                 >
                   {formatMoney(Math.max(0, balance - effectivePrice))}
                 </span>
@@ -268,32 +263,4 @@ export function ServicePurchaseModal({
               <button
                 onClick={handleSubmit}
                 disabled={!canSubmit}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl bg-primary text-bg font-extrabold hover:brightness-110 transition glow-primary disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {submitting ? (
-                  <Loader2 size={18} className="spin" />
-                ) : (
-                  <>
-                    <Sparkles size={18} />
-                    تأكيد الطلب — {formatMoney(effectivePrice)}
-                  </>
-                )}
-              </button>
-              {insufficient && (
-                <button
-                  onClick={() => {
-                    handleClose();
-                    onRechargeOpen();
-                  }}
-                  className="w-full px-4 py-3 rounded-2xl bg-surface-2 hover:bg-border text-text font-bold transition-colors"
-                >
-                  شحن المحفظة الآن
-                </button>
-              )}
-            </div>
-          </>
-        )}
-      </div>
-    </Modal>
-  );
-}
+                className="w-full inline-flex items-ce

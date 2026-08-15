@@ -33,14 +33,19 @@ export function Header({ onRecharge, onShare, onSupport, onNavigateWallet }: Hea
 
   useEffect(() => {
     if (!profile) return;
-    const load = () => {
-      const data = getNotifications(profile.id).slice(0, 20);
+    var active = true;
+    const load = async () => {
+      const data = (await getNotifications(profile.id)).slice(0, 20);
+      if (!active) return;
       setNotes(data);
       setUnread(data.filter((n) => !n.read).length);
     };
     load();
-    const interval = setInterval(load, 1500);
-    return () => clearInterval(interval);
+    const interval = setInterval(load, 3000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
   }, [profile]);
 
   useEffect(() => {
@@ -52,11 +57,11 @@ export function Header({ onRecharge, onShare, onSupport, onNavigateWallet }: Hea
     return () => window.removeEventListener('mousedown', onClick);
   }, []);
 
-  const markAllRead = () => {
+  const markAllRead = async () => {
     if (!profile || unread === 0) return;
     setUnread(0);
     setNotes((prev) => prev.map((n) => ({ ...n, read: true })));
-    markNotificationsRead(profile.id);
+    await markNotificationsRead(profile.id);
   };
 
   return (
@@ -93,14 +98,12 @@ export function Header({ onRecharge, onShare, onSupport, onNavigateWallet }: Hea
               </div>
             </div>
           </div>
-
           {/* Right cluster */}
           <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Wallet badge */}
             <button
               onClick={onNavigateWallet}
-              className="group flex items-center gap-2 rounded-2xl bg-surface-2 border border-border-soft hover:border-primary/40 pl-1 pr-3 py-1.5 transition-colors"
-              aria-label="المحفظة"
+              className="group flex items-center gap-2 rounded-2xl bg-surface-2 border border-border-soft hover:border-primary/40 pl-1 pr-3 py-1.5 transition-colors"aria-label="المحفظة"
             >
               <span
                 onClick={(e) => {
@@ -171,13 +174,11 @@ export function Header({ onRecharge, onShare, onSupport, onNavigateWallet }: Hea
                 </div>
               )}
             </div>
-
             {/* Options menu */}
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen((v) => !v)}
-                className="grid place-items-center w-10 h-10 rounded-2xl bg-surface-2 border border-border-soft hover:border-border text-muted hover:text-text transition-colors"
-                aria-label="القائمة"
+                className="grid place-items-center w-10 h-10 rounded-2xl bg-surface-2 border border-border-soft hover:border-border text-muted hover:text-text transition-colors"aria-label="القائمة"
               >
                 <MoreVertical size={18} />
               </button>
